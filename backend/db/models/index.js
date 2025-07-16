@@ -6,6 +6,10 @@ import { fileURLToPath } from 'url';
 import process from 'process';
 import Sequelize from 'sequelize';
 import configFile from '../config/config.js'; // .json이 아니라 .js로 바꿈
+import PostModel from './post.js';
+import TagModel from './tag.js';
+import MemoModel from './memo.js';
+import ScheduleModel from './schedule.js';
 
 // __dirname 대체
 const __filename = fileURLToPath(import.meta.url);
@@ -47,6 +51,61 @@ Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
+});
+
+
+// 다대 다 관계 표현
+const Post = PostModel(sequelize, Sequelize.DataTypes);
+const Tag = TagModel(sequelize, Sequelize.DataTypes);
+const Memo = MemoModel(sequelize, Sequelize.DataTypes);
+const Schedule = ScheduleModel(sequelize, Sequelize.DataTypes);
+
+Post.belongsToMany(Tag, { through: 'post_tags', foreignKey: 'post_id', onDelete: 'CASCADE' });
+Tag.belongsToMany(Post, { through: 'post_tags', foreignKey: 'tag_id', onDelete: 'CASCADE' });
+
+Memo.belongsToMany(Tag, { through: 'memo_tags', foreignKey: 'memo_id', onDelete: 'CASCADE' });
+Tag.belongsToMany(Memo, { through: 'memo_tags', foreignKey: 'tag_id', onDelete: 'CASCADE' });
+
+Schedule.belongsToMany(Tag, { through: 'schedule_tags', foreignKey: 'schedule_id', onDelete: 'CASCADE' });
+Tag.belongsToMany(Schedule, { through: 'schedule_tags', foreignKey: 'tag_id', onDelete: 'CASCADE' });
+
+User.belongsToMany(User, {
+  as: 'Followers',
+  through: 'user_relations',
+  foreignKey: 'following_id',
+  otherKey: 'follower_id',
+});
+User.belongsToMany(User, {
+  as: 'Followings',
+  through: 'user_relations',
+  foreignKey: 'follower_id',
+  otherKey: 'following_id',
+});
+
+User.belongsToMany(Post, {
+  through: 'post_likes',
+  foreignKey: 'user_id',
+  otherKey: 'post_id',
+  as: 'LikedPosts',
+});
+Post.belongsToMany(User, {
+  through: 'post_likes',
+  foreignKey: 'post_id',
+  otherKey: 'user_id',
+  as: 'PostLikers',
+});
+
+User.belongsToMany(Comment, {
+  through: 'comment_likes',
+  foreignKey: 'user_id',
+  otherKey: 'comment_id',
+  as: 'LikedComments',
+});
+Comment.belongsToMany(User, {
+  through: 'comment_likes',
+  foreignKey: 'comment_id',
+  otherKey: 'user_id',
+  as: 'CommentLikers',
 });
 
 // 내보내기
