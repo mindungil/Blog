@@ -4,6 +4,7 @@ import { configDotenv } from 'dotenv';
 import {db} from '../db/models/index.js';
 import helmet from 'helmet';
 import { errorHandler, notFoundHandler } from './middleware/errororHandler.js';
+import router from './routes/index.js';
 
 configDotenv();
 const app = express();
@@ -25,14 +26,14 @@ app.get('/', (req, res)=> {
     res.send('Hello world');
 })
 
+app.use('/api', router);
+
 // 404 에러 핸들러
 app.use(notFoundHandler);
 
 // 에러 헨들러
 app.use(errorHandler);
 
-const port = process.env.PORT;
-
-app.listen(port, () => {
-    console.log(`서버가 ${port}에서 실행 중 입니다.`);
+app.listen(process.env.PORT, () => {
+    console.log(`서버가 ${process.env.PORT}에서 실행 중 입니다.`);
 })
